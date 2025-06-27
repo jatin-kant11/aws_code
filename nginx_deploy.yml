@@ -1,0 +1,27 @@
+- name: Deploy NGINX Container with Custom HTML
+  hosts: ec2_hosts
+  become: true
+
+  tasks:
+    - name: Create HTML directory
+      file:
+        path: /opt/custom-nginx/html
+        state: directory
+        mode: '0755'
+
+    - name: Copy custom index.html
+      copy:
+        src: files/index.html
+        dest: /opt/custom-nginx/html/index.html
+        mode: '0644'
+
+    - name: Run NGINX container
+      docker_container:
+        name: nginx_custom
+        image: nginx:latest
+        ports:
+          - "80:80"
+        volumes:
+          - /opt/custom-nginx/html:/usr/share/nginx/html:ro
+        state: started
+        restart_policy: always
