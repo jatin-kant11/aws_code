@@ -1,0 +1,36 @@
+name: Broken Link Checker
+
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: '0 1 * * *'  # Daily at 01:00 UTC
+
+jobs:
+  link-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install lychee (Broken Link Checker)
+        run: |
+          curl -LsSf https://github.com/lycheeverse/lychee/releases/latest/download/lychee-linux.zip -o lychee.zip
+          unzip lychee.zip -d lychee
+          sudo mv lychee/lychee /usr/local/bin/
+
+      - name: Run lychee to check for broken links
+        run: |
+          lychee --verbose --exclude-mail --no-progress . > lychee-report.txt
+          cat lychee-report.txt
+
+      - name: Fail if there are broken links
+        run: |
+          if grep -q "✗" lychee-report.txt; then
+            echo "❌ Broken links found!"
+            exit 1
+          else
+            echo "✅ All links are valid."
+          fi
